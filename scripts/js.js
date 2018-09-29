@@ -41,38 +41,42 @@ var hrs = dateJS.getHours();
 	document.getElementById('greet').innerHTML =
 	        greeting;
 
-  function getBookmarks() {
-    return [
-      {
-        name: "YT",
-        href: "https://www.youtube.com/playlist?list=WL&disable_polymer=true"
-      },
-      {
-        name: "Tweeter",
-        href: "https://twitter.com"
-      },
-      {
-        name: "Github",
-        href: "https://github.com"
-      },
-      {
-        name: "Userstyles",
-        href: "https://userstyles.org"
-      },
-      {
-        name: "DA",
-        href: "http://deviantart.com"
-      }
-    ];
+  function saveState() {
+    var bookmarkNames = document.getElementsByClassName('bookmarkName');
+    var bookmarkHrefs = document.getElementsByClassName('bookmarkHref');
+
+    if (bookmarkNames.length != bookmarkHrefs.length) {
+      return;
+    }
+
+    var state = [];
+    for (var i = 0; i < bookmarkNames.length; i++) {
+      state.push({
+        name: bookmarkNames[i].value,
+        href: bookmarkHrefs[i].value
+      });
+    }
+
+    window.location.search = "?state=" + encodeURIComponent(JSON.stringify(state));
+  }
+
+  function getBookmarksFromUrl() {
+    var urlParams = new URLSearchParams(window.location.search);
+    return JSON.parse(decodeURIComponent(urlParams.get("state")));
   }
 
   function setBookmarksMenu(bookmarks) {
+    if (!bookmarks) {
+      return;
+    }
+
     var menu = document.getElementById('bookmarks')
     for (var i = 0; i < bookmarks.length; i++) {
         var menuItem = document.createElement('li');
 
         var link = document.createElement('a');
-        link.setAttribute('target', '_blank');
+        link.setAttribute('target', '_self');
+        // TODO: Does this need sanitization?
         link.setAttribute('href', bookmarks[i].href);
         link.appendChild(document.createTextNode(bookmarks[i].name));
         menuItem.appendChild(link);
@@ -81,5 +85,28 @@ var hrs = dateJS.getHours();
     }
   }
 
-  setBookmarksMenu(getBookmarks());
+  function addBookmark() {
+    var form = document.getElementById('editForm');
+    var name = document.createElement('input');
+    name.setAttribute('type', 'text');
+    name.setAttribute('class', 'bookmarkName');
+    name.setAttribute('placeholder', 'Name');
+    var url = document.createElement('input');
+    url.setAttribute('type', 'text');
+    url.setAttribute('class', 'bookmarkHref');
+    url.setAttribute('placeholder', 'URL');
+    var br = document.createElement('br');
+    form.prepend(name, '->', url, br)
+  }
+
+  function toggleEditFormVisibility() {
+    var formStyle = document.getElementById('editForm').style;
+    formStyle.display  = (formStyle.display == 'none') ? 'inline-block' : 'none';
+  }
+
+  setBookmarksMenu(getBookmarksFromUrl());
+  document.getElementById('editSubmit').onclick = saveState;
+  document.getElementById('addBookmark').onclick = addBookmark;
+  document.getElementById('editButton').onclick = toggleEditFormVisibility;
+  document.getElementById('editForm').style.display = 'none';
 }

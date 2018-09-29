@@ -14,9 +14,17 @@
 <label for="show"><span class="hamburg">&#9776;</span></label>
 <input type="checkbox" id="show">
 
-	<ul class="menu" id="bookmarks"/>
+	<ul class="menu" id="bookmarks">
+		<!-- TODO: use checkbox instead -->
+		<li><a target="_self" href="#" id="editButton">Edit</a></li>
+	</ul>
 
 </nav>
+
+<div id="editForm">
+		<button id="addBookmark">Add</button>
+		<button id="editSubmit">Submit</button>
+</div>
 
 <div class="boop">
 
@@ -25,6 +33,7 @@
 
 <div class="searchbar">
 
+<!-- TODO: Support various serch providers with dropdown -->
 <form method="get" action="https://google.com/search?q=">
 
 	<input type="text" autofocus class="searchbox" name="q" title="Search Google" placeholder="Search...">
