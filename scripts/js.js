@@ -1,4 +1,4 @@
-console.log('ayy' + ' ' + 'lmao'); 
+console.log('ayy' + ' ' + 'lmao');
 
 window.onload = greeting;
 
@@ -40,4 +40,46 @@ var hrs = dateJS.getHours();
 
 	document.getElementById('greet').innerHTML =
 	        greeting;
+
+  function getBookmarks() {
+    return [
+      {
+        name: "YT",
+        href: "https://www.youtube.com/playlist?list=WL&disable_polymer=true"
+      },
+      {
+        name: "Tweeter",
+        href: "https://twitter.com"
+      },
+      {
+        name: "Github",
+        href: "https://github.com"
+      },
+      {
+        name: "Userstyles",
+        href: "https://userstyles.org"
+      },
+      {
+        name: "DA",
+        href: "http://deviantart.com"
+      }
+    ];
+  }
+
+  function setBookmarksMenu(bookmarks) {
+    var menu = document.getElementById('bookmarks')
+    for (var i = 0; i < bookmarks.length; i++) {
+        var menuItem = document.createElement('li');
+
+        var link = document.createElement('a');
+        link.setAttribute('target', '_blank');
+        link.setAttribute('href', bookmarks[i].href);
+        link.appendChild(document.createTextNode(bookmarks[i].name));
+        menuItem.appendChild(link);
+
+        menu.appendChild(menuItem);
+    }
+  }
+
+  setBookmarksMenu(getBookmarks());
 }
