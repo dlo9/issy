@@ -57,12 +57,13 @@ var hrs = dateJS.getHours();
       });
     }
 
-    window.location.search = "?state=" + encodeURIComponent(JSON.stringify(state));
+    window.location.search = "?state=" + JSONC.pack(state);
   }
 
   function getBookmarksFromUrl() {
     var urlParams = new URLSearchParams(window.location.search);
-    return JSON.parse(decodeURIComponent(urlParams.get("state")));
+    // return JSON.parse(decodeURIComponent(urlParams.get("state")));
+    return JSONC.unpack(urlParams.get("state"));
   }
 
   function setBookmarksMenu(bookmarks) {
