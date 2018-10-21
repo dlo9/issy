@@ -41,35 +41,45 @@ var hrs = dateJS.getHours();
 	document.getElementById('greet').innerHTML =
 	        greeting;
 
-  function b64EncodeUnicode(str) {
-    // first we use encodeURIComponent to get percent-encoded UTF-8,
-    // then we convert the percent encodings into raw bytes which
-    // can be fed into btoa.
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-      function toSolidBytes(match, p1) {
-        return String.fromCharCode('0x' + p1);
-    }));
-  }
+  // TODO: how to handle globals?
+  var my_lzma = new LZMA("scripts/lzma_worker-min.js");
 
-  function b64DecodeUnicode(str) {
-    // Going backwards: from bytestream, to percent-encoding, to original string.
-    return decodeURIComponent(atob(str).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-  }
-
-  function encode(state) {
+  function encodeLZMA(state, onComplete) {
     var stateStr = JSON.stringify(state);
-    console.log(stateStr);
-    return LZString.compressToEncodedURIComponent(stateStr);
+    console.log("Compression state:" + stateStr);
+
+    my_lzma.compress(stateStr, 9, function on_finish(result, error) {
+      // TODO: error handling
+      console.log("Compression result: " + result);
+
+      var b64 = base64js.fromByteArray(result);
+      console.log("Compression b64: " + b64);
+
+      var b64Uri = encodeURIComponent(b64);
+      console.log("Compression b64Uri: " + b64Uri);
+
+      onComplete(b64Uri, error);
+    }, function on_progress(percent) {
+      console.log("Compression progress: " + percent + "%");
+    });
   }
 
-  function decode(stateZipStr) {
-    if (stateZipStr != null) {
-      var stateStr = LZString.decompressFromEncodedURIComponent(stateZipStr);
-      console.log(stateStr);
-      return JSON.parse(stateStr);
-    }
+  function decodeLZMA(b64Uri, onComplete) {
+    console.log("Decompression b64Uri: " + b64Uri);
+
+    var b64 = decodeURIComponent(b64Uri);
+    console.log("Decompression b64: " + b64);
+
+    var compressed = base64js.toByteArray(b64);
+    console.log("Decompression result: " + compressed);
+
+    my_lzma.decompress(compressed, function on_finish(result, error) {
+      console.log("Decompression state: " + result);
+      var state = JSON.parse(result);
+      onComplete(state, error);
+    }, function on_progress(percent) {
+      console.log("Decompression progress: " + percent + "%");
+    });
   }
 
   function saveState() {
@@ -88,12 +98,16 @@ var hrs = dateJS.getHours();
       });
     }
 
-    window.location.search = "?state=" + encode(state);
+    encodeLZMA(state, function on_finish(result, error) {
+      window.location.search = "?state=" + result;
+    });
   }
 
   function getBookmarksFromUrl() {
     var urlParams = new URLSearchParams(window.location.search);
-    return decode(urlParams.get("state"));
+    decodeLZMA(urlParams.get("state"), function on_finish(result, error) {
+      setBookmarksMenu(result);
+    })
   }
 
   function setBookmarksMenu(bookmarks) {
@@ -135,7 +149,7 @@ var hrs = dateJS.getHours();
     formStyle.display  = (formStyle.display == 'none') ? 'inline-block' : 'none';
   }
 
-  setBookmarksMenu(getBookmarksFromUrl());
+  getBookmarksFromUrl()
   document.getElementById('editSubmit').onclick = saveState;
   document.getElementById('addBookmark').onclick = addBookmark;
   document.getElementById('editButton').onclick = toggleEditFormVisibility;
