@@ -41,6 +41,37 @@ var hrs = dateJS.getHours();
 	document.getElementById('greet').innerHTML =
 	        greeting;
 
+  function b64EncodeUnicode(str) {
+    // first we use encodeURIComponent to get percent-encoded UTF-8,
+    // then we convert the percent encodings into raw bytes which
+    // can be fed into btoa.
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+      function toSolidBytes(match, p1) {
+        return String.fromCharCode('0x' + p1);
+    }));
+  }
+
+  function b64DecodeUnicode(str) {
+    // Going backwards: from bytestream, to percent-encoding, to original string.
+    return decodeURIComponent(atob(str).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+  }
+
+  function encode(state) {
+    var stateStr = JSON.stringify(state);
+    console.log(stateStr);
+    return LZString.compressToEncodedURIComponent(stateStr);
+  }
+
+  function decode(stateZipStr) {
+    if (stateZipStr != null) {
+      var stateStr = LZString.decompressFromEncodedURIComponent(stateZipStr);
+      console.log(stateStr);
+      return JSON.parse(stateStr);
+    }
+  }
+
   function saveState() {
     var bookmarkNames = document.getElementsByClassName('bookmarkName');
     var bookmarkHrefs = document.getElementsByClassName('bookmarkHref');
@@ -57,13 +88,12 @@ var hrs = dateJS.getHours();
       });
     }
 
-    window.location.search = "?state=" + JSONC.pack(state);
+    window.location.search = "?state=" + encode(state);
   }
 
   function getBookmarksFromUrl() {
     var urlParams = new URLSearchParams(window.location.search);
-    // return JSON.parse(decodeURIComponent(urlParams.get("state")));
-    return JSONC.unpack(urlParams.get("state"));
+    return decode(urlParams.get("state"));
   }
 
   function setBookmarksMenu(bookmarks) {
